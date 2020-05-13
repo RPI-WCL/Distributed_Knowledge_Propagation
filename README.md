@@ -1,4 +1,4 @@
-# distributed_knowledge_propagation 
+# Distributed_Knowledge_Propagation 
 
 ##### This repository contains the TLA+ specification and the TLAPS proof of correctness for a distributed knowledge propagation algorithm.
 
