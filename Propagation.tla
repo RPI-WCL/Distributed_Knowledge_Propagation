@@ -204,7 +204,9 @@ Messages ==    [type : {"1a"}, cord : Coordinators, val : Values]
 (*  availability and the behaviour of available agents                     *)
 (***************************************************************************)
 \*Available
-Available(x,t) == TRUE \/ FALSE
+CONSTANT Available(_, _)
+
+ASSUME \A x, t : Available(x,t) \in BOOLEAN
 
 \*Always Available
 Always_available(x) == \A t \in Time : Available(x,t)
