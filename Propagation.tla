@@ -133,10 +133,9 @@ temporalProperties == temporalProperty1
 \* it is delivered to all acceptors at the same time. 
 Deliver(m,t) ==  (m.dTime = t) /\ (state_time' = t) /\ (msgs' = msgs \cup {m}) 
 
-\*A message that is sent may or may not be delivered (May get lost)   
-Send(m,t) ==  
-              \/  \E t2 \in Time : (t2 > t) /\ Deliver(m,t2)  
-              \/  \A t2 \in Time : ~ Deliver(m,t2 )
+\*A message that is sent will be eventually delivered    
+Send(m,t) ==  \E t2 \in Time : (t2 > t) /\ Deliver(m,t2)  
+
             
 (***************************************************************************)
 (* Phase 1a: A coordinator sends a "1a" message to all replicas            *)
@@ -1271,5 +1270,5 @@ pAssumptions =>
                        
 =============================================================================
 \* Modification History
-\* Last modified Thu Sep 10 00:12:31 EDT 2020 by pauls
+\* Last modified Thu Sep 10 18:29:33 EDT 2020 by pauls
 \* Created Thu Nov 14 15:15:40 EST 2019 by pauls
