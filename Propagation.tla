@@ -30,7 +30,8 @@ Time == Nat
 (* Some temporal properties                                                *)
 (***************************************************************************)
 \* If a message has been delivered from all replicas at different times, 
-\* there will be a time when the system state will have that message 
+\* there will be a time when the new system state will have that message 
+\* from all replicas
 temporalProperty1 ==
 (
 (\A r \in Replicas : \E t \in Time : (state_time' = t) 
@@ -210,7 +211,7 @@ Always_available(x) == \A t \in Time : Available(x,t)
 
 
 (***************************************************************************)
-(*Rules for Masters                                                        *)
+(*Rules for Coordinators                                                        *)
 (***************************************************************************)
 Rule_1a_msg(c) == 
   (~(\A r \in Replicas : \E m \in msgs : m.type = "1b" /\ m.rep = r /\ m.cord = c))
@@ -1270,5 +1271,5 @@ pAssumptions =>
                        
 =============================================================================
 \* Modification History
-\* Last modified Wed Sep 09 23:36:23 EDT 2020 by pauls
+\* Last modified Thu Sep 10 00:12:31 EDT 2020 by pauls
 \* Created Thu Nov 14 15:15:40 EST 2019 by pauls
