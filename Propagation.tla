@@ -30,17 +30,13 @@ Time == Nat
 (* Some temporal properties                                                *)
 (***************************************************************************)
 \* If a message has been delivered from all replicas at different times, 
-\* there will be a time when the system state will have that message from
-\* all replicas at a lower time
+\* there will be a time when the system state will have that message 
 temporalProperty1 ==
 (
 (\A r \in Replicas : \E t \in Time : (state_time' = t) 
                                    /\ (\E m \in msgs' :  (m.rep = r)))
 => (\E T \in Time : state_time' = T 
-                /\ (\A r \in Replicas : 
-                      \E t \in Time : (T > t) 
-                                   /\ (state_time' = t) 
-                                   /\ (\E m \in msgs' : (m.rep = r))))
+                /\ (\A r \in Replicas : (\E m \in msgs' : (m.rep = r))))
 )
 
 \* For all coordinators, there is a time when no messages have been sent to or from it
@@ -901,61 +897,6 @@ pAssumptions =>
         BY <1>8         
         
         
-        
-\* Progress Theorem - Eventually a coordinator knows that `^$E^2_{G}\phi$ ^' 
-\* has been attained 
-THEOREM Theorem1 ==
-pAssumptions =>
- (\E t \in Time : \E c \in Coordinators : state_time = t /\ safeStateAttained' = [safeStateAttained EXCEPT ![c] = TRUE])
-<1> SUFFICES ASSUME pAssumptions
-             PROVE (\E t \in Time : \E c \in Coordinators : state_time = t /\ safeStateAttained' = [safeStateAttained EXCEPT ![c] = TRUE])
-    OBVIOUS
-<1>1.  \E t \in Time : \E c \in Coordinators :  state_time = t                                          
-                                             /\ msgsPost2b(c)
-    BY Lemma8
-<1>2.   \E c \in Coordinators : 
-                           /\ (\E t \in Time : state_time = t
-                                            /\ Always_available(c)
-                                            /\ \A r \in Replicas : \E m \in msgs : m.type = "2b" /\  m.cord = c /\ m.rep = r)
-    BY <1>1 DEF msgsPost2b
-<1>3. \E c \in Coordinators : Always_available(c)
-                           /\ (\E t \in Time : state_time = t
-                                            /\ Available(c,t)
-                                            /\ \A r \in Replicas : \E m \in msgs : m.type = "2b" /\  m.cord = c /\ m.rep = r) 
-    BY <1>2 DEF Always_available
-<1>4. aBehavior
-    BY DEF pAssumptions
-<1>5. Coordinator_behavior
-    BY <1>4 DEF aBehavior 
-<1>6. \E c \in Coordinators : Always_available(c)
-                           /\ (\E t \in Time : state_time = t
-                                            /\ Rule_2c_learn(c)
-                                            /\ \A r \in Replicas : \E m \in msgs : m.type = "2b" /\  m.cord = c /\ m.rep = r) 
-    BY <1>3, <1>5 DEF Coordinator_behavior    
-<1>7. \E c \in Coordinators : Always_available(c)
-                           /\ (\E t \in Time : state_time = t
-                                            /\ Rule_2c_learn(c)
-                                            /\ Available(c,t)
-                                            /\ (\A r \in Replicas : \E m \in msgs : m.type = "2b" /\  m.cord = c /\ m.rep = r)) 
-    BY <1>6 DEF Always_available    
-<1>8. \E c \in Coordinators : Always_available(c)
-                           /\ (\E t \in Time : state_time = t
-                                            /\ Rule_2c_learn(c)
-                                            /\ Available(c,t)
-                                            /\ (Phase2c_learn(c))
-                                            /\ (\A r \in Replicas : \E m \in msgs : m.type = "2b" /\  m.cord = c /\ m.rep = r)) 
-    BY <1>7 DEF Rule_2c_learn  
-<1>9. \E c \in Coordinators : Always_available(c)
-                           /\ (\E t \in Time : state_time = t
-                                            /\ (safeStateAttained' = [safeStateAttained EXCEPT ![c] = TRUE]) )
-    BY <1>8 DEF Phase2c_learn  
-<1>10. \E t2 \in Time : \E c \in Coordinators :
-                           ((state_time = t2 /\ safeStateAttained' = [safeStateAttained EXCEPT ![c] = TRUE]) )
-    BY <1>9                                                                                                                                                
-<1>200 QED
-    BY <1>10    
-
-
 
 \* Safety Lemma1 - A Coordinator will not learn `^$E^2_{G}\phi$ ^' if there
 \* is at least one replica which does not know `^$E_{G}\phi$ ^'
@@ -1222,33 +1163,9 @@ sAssumptions =>
     BY <1>2            
              
              
-\* first version of safety theorem    
-THEOREM Theorem2 ==
-sAssumptions =>
-(
-    (
-     \A t \in Time :               
-                (\E c \in Coordinators :
-                                   state_time = t
-                                /\ Available(c,t)    
-                                /\ safeStateAttained' = [safeStateAttained EXCEPT ![c] = TRUE]) 
-                =>   (\A r \in Replicas : allKnowVal' = [allKnowVal EXCEPT ![r] = TRUE])             
-    )
-/\  (
-     \A t \in Time :               
-                (\E r \in Replicas : state_time = t 
-                                 /\ Available(r,t)
-                                 /\ (allKnowVal' = [allKnowVal EXCEPT ![r] = TRUE]))
-                =>   (\A r2 \in Replicas :  knowVal' = [knowVal EXCEPT ![r2] = TRUE])              
-    )  
- 
-)         
-<1> QED
-    BY Lemma11, Lemma12
-
-
-\*second version of safety theorem
-THEOREM Theorem3 ==
+             
+\* Safety
+THEOREM Theorem1 ==
 sAssumptions =>
 (
     (
@@ -1291,9 +1208,67 @@ sAssumptions =>
     BY <1>5                                                                 
 <1>200 QED
     BY <1>6                 
-    
+ 
+
+\* Progress  
+THEOREM Theorem2 ==
+pAssumptions =>
+ (\E t \in Time : \E c \in Coordinators : state_time = t /\ safeStateAttained' = [safeStateAttained EXCEPT ![c] = TRUE])
+<1> SUFFICES ASSUME pAssumptions
+             PROVE (\E t \in Time : \E c \in Coordinators : state_time = t /\ safeStateAttained' = [safeStateAttained EXCEPT ![c] = TRUE])
+    OBVIOUS
+<1>1.  \E t \in Time : \E c \in Coordinators :  state_time = t                                          
+                                             /\ msgsPost2b(c)
+    BY Lemma8
+<1>2.   \E c \in Coordinators : 
+                           /\ (\E t \in Time : state_time = t
+                                            /\ Always_available(c)
+                                            /\ \A r \in Replicas : \E m \in msgs : m.type = "2b" /\  m.cord = c /\ m.rep = r)
+    BY <1>1 DEF msgsPost2b
+<1>3. \E c \in Coordinators : Always_available(c)
+                           /\ (\E t \in Time : state_time = t
+                                            /\ Available(c,t)
+                                            /\ \A r \in Replicas : \E m \in msgs : m.type = "2b" /\  m.cord = c /\ m.rep = r) 
+    BY <1>2 DEF Always_available
+<1>4. aBehavior
+    BY DEF pAssumptions
+<1>5. Coordinator_behavior
+    BY <1>4 DEF aBehavior 
+<1>6. \E c \in Coordinators : Always_available(c)
+                           /\ (\E t \in Time : state_time = t
+                                            /\ Rule_2c_learn(c)
+                                            /\ \A r \in Replicas : \E m \in msgs : m.type = "2b" /\  m.cord = c /\ m.rep = r) 
+    BY <1>3, <1>5 DEF Coordinator_behavior    
+<1>7. \E c \in Coordinators : Always_available(c)
+                           /\ (\E t \in Time : state_time = t
+                                            /\ Rule_2c_learn(c)
+                                            /\ Available(c,t)
+                                            /\ (\A r \in Replicas : \E m \in msgs : m.type = "2b" /\  m.cord = c /\ m.rep = r)) 
+    BY <1>6 DEF Always_available    
+<1>8. \E c \in Coordinators : Always_available(c)
+                           /\ (\E t \in Time : state_time = t
+                                            /\ Rule_2c_learn(c)
+                                            /\ Available(c,t)
+                                            /\ (Phase2c_learn(c))
+                                            /\ (\A r \in Replicas : \E m \in msgs : m.type = "2b" /\  m.cord = c /\ m.rep = r)) 
+    BY <1>7 DEF Rule_2c_learn  
+<1>9. \E c \in Coordinators : Always_available(c)
+                           /\ (\E t \in Time : state_time = t
+                                            /\ (safeStateAttained' = [safeStateAttained EXCEPT ![c] = TRUE]) )
+    BY <1>8 DEF Phase2c_learn  
+<1>10. \E t2 \in Time : \E c \in Coordinators :
+                           ((state_time = t2 /\ safeStateAttained' = [safeStateAttained EXCEPT ![c] = TRUE]) )
+    BY <1>9                                                                                                                                                
+<1>200 QED
+    BY <1>10    
+
+
+
+
+
+
                        
 =============================================================================
 \* Modification History
-\* Last modified Sun May 03 17:31:35 EDT 2020 by pauls
+\* Last modified Wed Sep 09 23:36:23 EDT 2020 by pauls
 \* Created Thu Nov 14 15:15:40 EST 2019 by pauls
