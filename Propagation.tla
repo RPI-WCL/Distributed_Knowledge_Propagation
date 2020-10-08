@@ -38,6 +38,8 @@ temporalProperty1 ==
 => (\E T \in Time : state_time' = T 
                 /\ (\A r \in Replicas : (\E m \in msgs' : (m.rep = r))))
 )
+         
+        
 
 \* For all coordinators, there is a time when no messages have been sent to or from it
 temporalProperty2 ==
@@ -45,7 +47,7 @@ temporalProperty2 ==
 (\E t \in Time :   state_time = t
                  /\ (~(\E m \in msgs : m.cord = c)))
 
-\*if some new state X exists at a time t, then X is the current state at some time t2>t
+\*if some new state X exists at a time t, then X is the current state at some time
 \* the following property includes multiple variations for pattern matching
 temporalProperty3 ==
  (
@@ -58,7 +60,6 @@ temporalProperty3 ==
                                 /\ m.val = v) 
      =>
       (\E t2 \in Time:
-             t2>t
            /\ state_time = t2  
            /\ \E v \in Values : 
                 \E m \in msgs : m.type = "1a" 
@@ -69,51 +70,48 @@ temporalProperty3 ==
 /\(
     \A t \in Time:
      \A c \in Coordinators:   
-          (state_time' = t
+          ((state_time' = t
            /\ \A r \in Replicas : 
                \E m \in msgs' : m.type = "1b" 
                              /\ m.cord = c 
                              /\ m.rep = r) 
      =>
       (\E t2 \in Time:
-             t2>t
            /\ state_time = t2  
            /\ \A r \in Replicas : 
                \E m \in msgs : m.type = "1b" 
                             /\ m.cord = c 
-                            /\ m.rep = r) 
+                            /\ m.rep = r)) 
   )
   
 /\(
     \A t \in Time:
      \A c \in Coordinators:   
-          (state_time' = t
+         ((state_time' = t
            /\ \E m \in msgs' : m.cord = c 
                            /\  m.type = "2a") 
      =>
       (\E t2 \in Time:
-             t2>t
            /\ state_time = t2  
            /\ \E m \in msgs : m.cord = c 
-                          /\  m.type = "2a") 
+                          /\  m.type = "2a")) 
   )
   
 /\(
     \A t \in Time:
      \A c \in Coordinators:   
-          (state_time' = t
+         ((state_time' = t
            /\ \A r \in Replicas : 
                \E m \in msgs' : m.type = "2b" 
                              /\ m.cord = c 
                              /\ m.rep = r) 
      =>
       (\E t2 \in Time:
-             t2>t
            /\ state_time = t2  
            /\ \A r \in Replicas : 
                \E m \in msgs : m.type = "2b" 
                             /\ m.cord = c 
-                            /\ m.rep = r) 
+                            /\ m.rep = r)) 
   )  
     
 
@@ -128,7 +126,7 @@ temporalProperties == temporalProperty1
 (*  A message is added to msgs once delivered                              *)
 (*  Only the msgs is accessible by agents                                  *) 
 (***************************************************************************)
-\*sending a message does not change system state, so using an abstract definiion   
+\*sending a message does not change system state, so we leave out the definition  
 CONSTANT Send(_,_) 
 
 
@@ -237,16 +235,8 @@ Rule_2c_learn(c,t) ==
 (*Rules for Replicas                                                       *)
 (***************************************************************************)
 Rule_1b_msg(r,t) == 
- \A c \in Coordinators :
-  (
-    (\E m \in msgs : \E v \in Values: m.type = "1a" 
-                                   /\ m.cord = c
-                                   /\ m.val = v)
-      =>   (\E m \in msgs : \E v \in Values: m.type = "1a" 
-                                          /\ m.cord = c
-                                          /\ m.val = v   
-                                          /\ Phase1b(r,m,t))
-  )
+ \A c \in Coordinators : \A m \in msgs : \A v \in Values :
+  ((m.type = "1a" /\ m.cord = c /\ m.val = v) =>   Phase1b(r,m,t))
 
 
 Rule_1b_learn(r,t) ==
@@ -254,15 +244,10 @@ Rule_1b_learn(r,t) ==
 /\ (Phase1b_learn(r,t) <=>   (\E c \in Coordinators: \E m \in msgs : m.type = "1a" /\ m.cord = c))                          
                        
       
- 
+
 Rule_2b_msg(r,t) == 
- \A c \in Coordinators :
-  (
-    (\E m \in msgs : m.type = "2a" /\ m.cord = c)
-       
-           =>  (\E m \in msgs : m.type = "2a" /\ m.cord = c   
-                                              /\ Phase2b(r,m,t) )
-  )                                        
+ \A c \in Coordinators : \A m \in msgs :
+  ((m.type = "2a" /\ m.cord = c) =>  Phase2b(r,m,t))                                        
 
 
 Rule_2b_learn(r,t) ==
@@ -345,7 +330,7 @@ aDelivery ==
                                                   rep |-> r],t2)                                                  
 
 \* Messages Cannot Be Corrupted: if a message exists in the system state, 
-\* then it must have been sent 
+\* then it must have been sent at some time
 aNoCorruption ==
     (    
         \A r \in Replicas: \A m \in msgs :
@@ -384,7 +369,7 @@ pAssertions ==    aAvailability
                /\ aSysProps
 
 \* safety assertions
-sAssertions ==   allReplicasAlwaysAvailable
+sAssertions ==    allReplicasAlwaysAvailable
                /\ aNoCorruption
                /\ aBehavior
                /\ aSysProps
@@ -1249,5 +1234,5 @@ pAssertions =>
                        
 =============================================================================
 \* Modification History
-\* Last modified Sat Sep 12 15:22:52 EDT 2020 by pauls
+\* Last modified Thu Oct 08 12:43:35 EDT 2020 by pauls
 \* Created Thu Nov 14 15:15:40 EST 2019 by pauls
